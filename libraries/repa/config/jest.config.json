@@ -1,0 +1,5 @@
+{
+  "extends": "@kelp_digital/heft-library-rig/profiles/default/config/jest.config.json",
+  // Code coverage tracking is disabled by default; set this to true to enable it
+  "collectCoverage": true
+}

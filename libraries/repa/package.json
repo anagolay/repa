@@ -1,0 +1,84 @@
+{
+  "name": "@anagolay/repa",
+  "version": "0.1.0",
+  "description": "Relaychain and Parachain production infra setup",
+  "homepage": "https://gitlab.com/anagolay/repa/-/blob/main/README.md",
+  "bugs": {
+    "url": "https://gitlab.com/anagolay/repa"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://gitlab.com/anagolay/repa",
+    "directory": "libraries/repa"
+  },
+  "license": "Apache-2",
+  "author": "daniel@woss.io",
+  "bin": "./lib-commonjs/bin.js",
+  "exports": {
+    ".": {
+      "browser": "./lib/index.browser.js",
+      "import": "./lib/index.js",
+      "require": "./lib-commonjs/index.js",
+      "node": "./lib-commonjs/index.js"
+    },
+    "./*": {
+      "require": "./lib-commonjs/*.js",
+      "import": "./lib/*.js"
+    }
+  },
+  "main": "./lib-commonjs/index.js",
+  "module": "./lib/index.js",
+  "types": "./lib/util.d.ts",
+  "scripts": {
+    "_phase:build": "NODE_ENV=production heft test --clean",
+    "_phase:code-quality": "eslint --ignore-path ../.eslintignore .",
+    "_phase:test": "heft test --no-build",
+    "build": "NODE_ENV=production heft test --clean",
+    "test": "heft test --clean",
+    "test:watch": "heft test --watch",
+    "watch": "heft build --watch",
+    "build:bin": "pkg --targets node18-linux ./dist/repa.js --out-path binaries",
+    "link:bin": "sudo ln -sf $(pwd)/tools/cli/dist/repa.js /usr/local/bin/repa && sudo chmod +x /usr/local/bin/repa",
+    "link:bin:lib": "sudo ln -sf $GITPOD_REPO_ROOT/tools/cli/lib/index.js /usr/local/bin/repa-lib && sudo chmod +x /usr/local/bin/anagolay-lib"
+  },
+  "dependencies": {
+    "@polkadot/util": "10.4.2",
+    "@polkadot/keyring": "10.4.2",
+    "commander": "10.0.0",
+    "yaml": "2.2.1",
+    "@polkadot/util-crypto": "10.4.2",
+    "ramda": "0.28.0",
+    "pretty-error": "4.0.0",
+    "shelljs": "0.8.5",
+    "slug": "8.2.2"
+  },
+  "devDependencies": {
+    "@kelp_digital/heft-esm-transform-plugin": "https://ipfs.anagolay.network/ipfs/bafybeid2la5atzl4bvmoy4g3ok3qpdp6rriyd2j2w7pxh72rwvwkbdzova",
+    "@kelp_digital/heft-library-rig": "https://ipfs.anagolay.network/ipfs/bafybeiaczeebskjlgd2b7eukucgmx24vccas7mhlutvqrh6cwfqw7y4k2a",
+    "@microsoft/api-extractor": "7.29.2",
+    "@rushstack/eslint-config": "3.0.0",
+    "@rushstack/heft": "0.47.3",
+    "@rushstack/heft-jest-plugin": "0.3.25",
+    "@rushstack/heft-node-rig": "1.10.2",
+    "@rushstack/heft-webpack5-plugin": "0.5.40",
+    "@types/heft-jest": "1.0.3",
+    "@types/node": "18.7.6",
+    "@types/ramda": "0.28.20",
+    "eslint": "8.22.0",
+    "eslint-plugin-simple-import-sort": "7.0.0",
+    "eslint-plugin-unused-imports": "2.0.0",
+    "nodemon": "2.0.15",
+    "tslib": "2.4.0",
+    "typescript": "4.7.4",
+    "@types/shelljs": "0.8.11",
+    "@types/slug": "5.0.3",
+    "pkg": "5.8.0",
+    "ts-loader": "9.3.1",
+    "webpack": "5.68.0",
+    "webpack-node-externals": "3.0.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "licenseFile": "./LICENSE"
+}

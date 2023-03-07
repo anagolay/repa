@@ -1,0 +1,122 @@
+{
+  "files.associations": {
+    "rush.json": "jsonc",
+    "repa.json": "json5",
+    "*.json": "json",
+    "**/config/*.json": "jsonc",
+    "package.json": "json",
+    "*.cjs": "javascript",
+    ".devops/ci/*.gitlab-ci.yml": "yaml",
+    ".tmux.conf.local": "properties"
+  },
+  "terminal.integrated.defaultProfile.linux": "zsh",
+  "editor.codeActionsOnSave": {
+    "source.fixAll": true
+  },
+  "workbench.sideBar.location": "right",
+  "editor.wordWrap": "bounded",
+  "editor.wordWrapColumn": 110,
+  "editor.rulers": [
+    110
+  ],
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": false,
+  "[svelte]": {
+    "editor.defaultFormatter": "svelte.svelte-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.wordWrap": "off"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[markdown]": {
+    "editor.wordWrap": "wordWrapColumn",
+    "editor.wordWrapColumn": 110,
+    "editor.quickSuggestions": {
+      "comments": "on",
+      "strings": "on",
+      "other": "on"
+    },
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  // "javascript.validate.enable": false,
+  "npm.packageManager": "pnpm",
+  "cSpell.words": [
+    "anagolay",
+    "bafy",
+    "cidv",
+    "clui",
+    "destructure",
+    "fontsource",
+    "grayscale",
+    "ipfs",
+    "jdenticon",
+    "Jsonify",
+    "Keypair",
+    "millis",
+    "multihashes",
+    "pnpm",
+    "pnpx",
+    "polkadot",
+    "rehosted",
+    "remeda",
+    "subsampling",
+    "Suri",
+    "tailwind",
+    "Unsub",
+    "urijs",
+    "verif",
+    "webextension"
+  ],
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/bower_components": true,
+    "**/*.code-search": true,
+    "/tmp": true,
+    "temp": true,
+    "app/.svelte-kit": true,
+    "app/build": true
+  },
+  "eslint.enable": true,
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact",
+    "svelte"
+  ],
+  "eslint.alwaysShowStatus": true,
+  "eslint.format.enable": true,
+  "eslint.packageManager": "pnpm",
+  "eslint.useESLintClass": true,
+  "terminal.integrated.lineHeight": 1.2,
+  "terminal.integrated.letterSpacing": 1,
+  "eslint.lintTask.enable": true,
+  "eslint.probe": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact",
+    "html",
+    "vue",
+    "markdown",
+    "svelte"
+  ],
+  "workbench.colorCustomizations": {
+    "titleBar.activeBackground": "#3659c2"
+  },
+  "terminal.integrated.scrollback": 10000,
+  "editor.stickyScroll.enabled": true,
+  "zenMode.hideTabs": false,
+  "zenMode.fullScreen": false,
+  "git.autofetch": true,
+  "scm.defaultViewMode": "tree"
+  // "typescript.tsserver.log": "normal"
+  // "javascript.preferences.importModuleSpecifierEnding": "js",
+  // "typescript.preferences.importModuleSpecifierEnding": "js"
+}

@@ -1,0 +1,13 @@
+{
+  "extends": "./node_modules/@kelp_digital/heft-library-rig/profiles/default/tsconfig-base.json",
+  "compilerOptions": {
+    "importHelpers": true,
+    "lib": ["esnext", "scripthost", "dom", "WebWorker"],
+
+    "types": ["heft-jest", "node"],
+    "module": "esnext",
+    "target": "esnext",
+    "moduleResolution": "node",
+    "skipLibCheck": true
+  }
+}
