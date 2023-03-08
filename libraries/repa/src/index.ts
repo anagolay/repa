@@ -10,10 +10,13 @@
 /**
  * Config file name
  */
-export const configFileName: "repa.yml" = "repa.yml";
+export const configFileName: 'repa.yml' = 'repa.yml';
 
-export * from "./booleans";
-export * from "./docker";
-export * from "./exec";
-export * from "./helpers";
-export * from "./lib";
+export * from './booleans';
+export * from './docker';
+export * from './exec';
+export * from './helpers';
+export * from './lib';
+export * from './types/dockerComposeTypes';
+export * from './types/repaConfig';
+export * from './types/specRelay';

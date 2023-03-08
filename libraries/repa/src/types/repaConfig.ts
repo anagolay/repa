@@ -1,16 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { IDockerComposeService } from "./dockerComposeTypes";
-import { RuntimeGenesisConfig } from "./plainSpecRelay";
+import { IDockerComposeService } from './dockerComposeTypes';
+import { RuntimeGenesisConfig } from './specRelay';
 
 /* eslint-disable @typescript-eslint/naming-convention */
-export type ContainerManagementEngine = "docker" | "podman";
+export type ContainerManagementEngine = 'docker' | 'podman';
 
 export interface IRepaConfig {
   version: number;
   /**
    * value of this will become COMPOSE_PROJECT_NAME env
    */
-  dockerComposeProject?: string;
+  projectName: string;
   cme: ContainerManagementEngine;
   relay: Relay;
 }
@@ -71,30 +71,4 @@ export interface Node {
    * directly merged with docker-compose top level networks
    */
   networks?: Record<string, any>;
-}
-
-export interface RawRelayChainSpec {
-  name: string;
-  id: string;
-  chainType: string;
-  bootNodes: string[];
-  telemetryEndpoints: any;
-  protocolId: string;
-  properties: any;
-  forkBlocks: any;
-  badBlocks: any;
-  lightSyncState: any;
-  codeSubstitutes: CodeSubstitutes;
-  genesis: GenesisRaw;
-}
-
-export interface CodeSubstitutes {}
-
-export interface GenesisRaw {
-  raw: Raw;
-}
-
-export interface Raw {
-  top: Record<string, string>;
-  childrenDefault: Record<string, string>;
 }

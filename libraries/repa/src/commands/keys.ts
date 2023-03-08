@@ -1,9 +1,8 @@
 import chalk from 'chalk';
 import { Command } from 'commander';
-import { spawn } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { equals, find, includes, isNil, map, propEq, startsWith } from 'ramda';
+import { find, isNil, map, propEq, startsWith } from 'ramda';
 import slug from 'slug';
 import { parse } from 'yaml';
 
@@ -15,10 +14,6 @@ import { IDockerCompose } from '../types/dockerComposeTypes';
 import { Node } from '../types/repaConfig';
 
 /**
- * UNUSED COMMAND
- */
-
-/**
  * Workflow main Command
  *
  * @remarks Usage `anagolay help workflow`
@@ -26,110 +21,46 @@ import { Node } from '../types/repaConfig';
  * @public
  */
 export default async function makeCommand(): Promise<Command> {
-  const cmd = new Command('start');
-  cmd.description('Start containers');
+  const cmd = new Command('insert-keys');
+  cmd.description('Insert keys to running containers');
   cmd.option('-c, --config <file>', 'Config path', configFileName);
   cmd.option('-o, --output <string>', 'Output directory', 'output');
-  cmd.option('-t, --tail', 'Tail the compose logs', false);
   cmd.option('-d, --debug', 'Include all console.debug, UNSAFE because it will show the suri', false);
-  cmd.option('--justKeys', 'Skip starting the containers, assume they are running, just add keys', false);
 
-  cmd.action(start);
+  cmd.action(main);
 
   return cmd;
 }
 interface IStartOptions extends ICommonOptions {
-  tail: boolean;
-  justKeys: boolean;
   debug: boolean;
 }
-/**
- * Generate init config
- */
-async function start(
+
+async function main(
   options: IStartOptions = {
     config: configFileName,
     output: 'output',
-    tail: false,
-    justKeys: false,
     debug: false
   }
 ): Promise<void> {
-  const { output, justKeys, config: configFileName } = options;
+  const { output, config: configFileName } = options;
 
   const { projectName } = await readConfig(configFileName);
-
-  const composeFile: IDockerCompose = parse(
-    (await readFile(resolve(process.cwd(), `${output}/docker-compose.yml`))).toString()
-  );
-
   if (isNil(projectName)) {
-    throw new Error(
-      'Cannot determine the project name, either add `projectName` to the `repa.yml` file or export the COMPOSE_PROJECT_NAME'
-    );
+    throw new Error('Cannot determine the project name, add `projectName` to the `repa.yml`');
   }
 
   console.log(chalk.yellow('Checking compose integrity'));
   await exec(['docker-compose', `-f ${process.cwd()}/${output}/docker-compose.yml`, 'config'].join(' '));
 
-  console.log(chalk.yellow('Starting the containers'));
-  console.log(
-    chalk.yellow(['    $', 'docker-compose ', `-f ./${output}/docker-compose.yml`, 'up'].join(' '))
-  );
+  // insert keys
+  await insertKeys(options);
 
-  // console.debug('compose process %s', composeUp.pid)
-  console.log(chalk.yellow('  Waiting for services to start'));
-  let processedServices = Object.keys(composeFile.services).length;
-
-  // by default we start the containers, but this is very buggy, we can just add keys
-  if (!justKeys) {
-    const composeUp = spawn('docker-compose', [`-f docker-compose.yml`, 'up'], {
-      detached: true,
-      shell: true,
-      // stdio: tail ? "inherit" : undefined,
-      cwd: resolve(process.cwd(), output)
-    });
-
-    composeUp.on('close', (code) => {
-      console.log('shutting down code', code);
-      process.exit(code || 0);
-    });
-
-    composeUp.stderr?.on('data', async (data) => {
-      // this is where the output is written, this is NOT AN ERROR but it can be :()
-      const d = data.toString();
-
-      if (includes('Native runtime:', d)) {
-        console.log(d);
-        processedServices -= 1;
-      } else {
-        // this must be here
-        // process.stdout.write(d);
-        console.log(d);
-      }
-    });
-  } else {
-    // now when we assume we have the containers running, we need to set this to 0 so the keys can pick it up
-    processedServices = 0;
-  }
-
-  const interval = setInterval(async () => {
-    console.log('checking the services ...', processedServices);
-    if (equals(0, processedServices)) {
-      // clear interval first
-      clearInterval(interval);
-
-      // insert keys
-      await insertKeys(options);
-
-      console.log('Restarting services so the finalization can begin ...');
-      await exec(['docker-compose', `-f docker-compose.yml`, 'restart'].join(' '), {
-        cwd: resolve(process.cwd(), output)
-      });
-      console.log('🎉🎉🎉🎉🎉🎉 done');
-      process.exit(0);
-    }
-  }, 1000);
+  console.log('Restarting services so the finalization can begin ...');
+  await exec(['docker-compose', `-f docker-compose.yml`, 'restart'].join(' '), {
+    cwd: resolve(process.cwd(), output)
+  });
+  console.log('🎉🎉🎉🎉🎉🎉 done');
+  process.exit(0);
 }
 
 /**
@@ -145,9 +76,8 @@ async function insertKeys(options: IStartOptions): Promise<void> {
   const composeFile: IDockerCompose = parse(
     (await readFile(resolve(process.cwd(), output, `docker-compose.yml`))).toString()
   );
-  console.log(composeFile);
   const keys: string[] = Object.keys(composeFile.services);
-  const composeProjectName = slug(process.env.COMPOSE_PROJECT_NAME as string, '-');
+  const composeProjectName = slug(config.projectName as string, '-');
 
   await Promise.all(
     map(async (key: string) => {

@@ -1,12 +1,12 @@
 #!/usr/bin/env -S node
 //--experimental-modules --experimental-specifier-resolution=node
 
-import { Command } from "commander";
-import PrettyError from "pretty-error";
+import { Command } from 'commander';
 
-import makeCommandGenerate from "./commands/generate";
-import makeCommandInit from "./commands/init";
-import makeCommandStart from "./commands/start";
+import makeCommandExport from './commands/export';
+import makeCommandGenerate from './commands/generate';
+import makeCommandInit from './commands/init';
+import makeCommandKeys from './commands/keys';
 
 export interface ICommonOptions {
   config: string;
@@ -20,20 +20,18 @@ async function main(): Promise<void> {
   // const program = commander.createCommand();
   const cmd = new Command();
 
-  cmd.version("0.1.0").description(`Welcome to REPA CLI.`);
+  cmd.version('0.1.0').description(`Welcome to REPA CLI.`);
 
   /// HERE we start with adding the 1st level commands
   cmd.addCommand(await makeCommandInit());
   cmd.addCommand(await makeCommandGenerate());
-  cmd.addCommand(await makeCommandStart());
+  cmd.addCommand(await makeCommandKeys());
+  cmd.addCommand(await makeCommandExport());
 
   await cmd.parseAsync();
 }
 
 main().catch((e) => {
-  const pe = new PrettyError();
-  const renderedError = pe.render(e);
-  console.log(renderedError);
-  // console.log(e);
+  console.error(e);
   process.exit(1);
 });

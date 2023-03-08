@@ -222,3 +222,27 @@ export interface Beefy {
 export interface Sudo {
   key: string;
 }
+
+export interface RawRelayChainSpec {
+  name: string;
+  id: string;
+  chainType: string;
+  bootNodes: string[];
+  telemetryEndpoints: any;
+  protocolId: string;
+  properties: any;
+  forkBlocks: any;
+  badBlocks: any;
+  lightSyncState: any;
+  codeSubstitutes: Record<string, any>;
+  genesis: GenesisRaw;
+}
+
+export interface GenesisRaw {
+  raw: Raw;
+}
+
+export interface Raw {
+  top: Record<string, string>;
+  childrenDefault: Record<string, string>;
+}

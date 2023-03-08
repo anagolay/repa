@@ -1,19 +1,17 @@
-import { equals, isNil, map, mergeDeepRight } from "ramda";
+import { equals, isNil, map, mergeDeepRight } from 'ramda';
 
-import { dockerRun } from "./docker";
-import { createAccount, IAccountForSpec, relaySessionKeys } from "./helpers";
-import { RelayPlainSpec, SessionKey } from "./types/plainSpecRelay";
-import { IRepaConfig, RawRelayChainSpec } from "./types/repaConfig";
+import { dockerRun } from './docker';
+import { createAccount, IAccountForSpec, relaySessionKeys } from './helpers';
+import { IRepaConfig } from './types/repaConfig';
+import { RawRelayChainSpec, RelayPlainSpec, SessionKey } from './types/specRelay';
 
 /**
  * Update the specs
  * @param config
  * @param spec
+ * @public
  */
-export async function updateSpec(
-  config: IRepaConfig,
-  spec: RelayPlainSpec
-): Promise<RelayPlainSpec> {
+export async function updateSpec(config: IRepaConfig, spec: RelayPlainSpec): Promise<RelayPlainSpec> {
   console.debug(` modifying the plain spec file ...`);
 
   const { name, protocolId, sudo, runtimeGenesisConfig } = config.relay.spec;
@@ -27,14 +25,12 @@ export async function updateSpec(
       const account = await createAccount(node.suri);
       const sessionKey: SessionKey = await relaySessionKeys(node.suri);
       if (isNil(node.balance) || equals(node.balance, 0)) {
-        console.warn(
-          `Balance for the node on index ${i}, is not valid. Setting to 0 [zero]`
-        );
+        console.warn(`Balance for the node on index ${i}, is not valid. Setting to 0 [zero]`);
       }
       return {
         balance: node.balance || 0,
         account,
-        sessionKey,
+        sessionKey
       };
     })
   );
@@ -43,7 +39,7 @@ export async function updateSpec(
     ...map((e) => {
       return [e.account.aura.address, e.balance];
     }, nodes),
-    ...(config.relay.spec.runtimeGenesisConfig?.balances.balances || []),
+    ...(config.relay.spec.runtimeGenesisConfig?.balances.balances || [])
   ];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -51,28 +47,25 @@ export async function updateSpec(
     ...spec,
     name,
     protocolId: protocolId || spec.protocolId,
-    chainType: "Live",
+    chainType: 'Live',
     genesis: {
       runtime: {
         ...spec.genesis.runtime,
         // eslint-disable-next-line @typescript-eslint/naming-convention
         runtime_genesis_config: {
-          ...mergeDeepRight(
-            spec.genesis.runtime.runtime_genesis_config,
-            runtimeGenesisConfig || {}
-          ),
+          ...mergeDeepRight(spec.genesis.runtime.runtime_genesis_config, runtimeGenesisConfig || {}),
           session: {
-            keys: map((e) => e.sessionKey, nodes),
+            keys: map((e) => e.sessionKey, nodes)
           },
           balances: {
-            balances,
+            balances
           },
           sudo: {
-            key: sudo,
-          },
-        },
-      },
-    },
+            key: sudo
+          }
+        }
+      }
+    }
   };
   return mutSpec;
 }
@@ -81,20 +74,21 @@ export async function updateSpec(
  *
  * Build the plain specs
  * @param config
+ * @public
  */
 export async function buildSpec(config: IRepaConfig): Promise<RelayPlainSpec> {
   console.log(`Generating plain spec file ...`);
   const {
     relay: {
       image,
-      spec: { chainType },
-    },
+      spec: { chainType }
+    }
   } = config;
 
-  const out = await dockerRun(["--rm"], image, [
-    "build-spec",
+  const out = await dockerRun(['--rm'], image, [
+    'build-spec',
     `--chain=${chainType}`,
-    "--disable-default-bootnode",
+    '--disable-default-bootnode'
   ]);
 
   const spec: RelayPlainSpec = JSON.parse(out);
@@ -117,27 +111,16 @@ export async function buildSpecRaw(
   const {
     relay: {
       image,
-      spec: { chainType },
-    },
+      spec: { chainType }
+    }
   } = config;
 
-  const absOutput = outputDir.startsWith("/")
-    ? outputDir
-    : `$(pwd)/./"${outputDir}"`;
+  const absOutput = outputDir.startsWith('/') ? outputDir : `$(pwd)/./"${outputDir}"`;
 
   const out = await dockerRun(
-    [
-      `--volume ${absOutput}:/app`,
-      `--name=tmp_relaychain_${chainType}`,
-      "--rm",
-    ],
+    [`--volume ${absOutput}:/app`, `--name=tmp_relaychain_${chainType}`, '--rm'],
     image,
-    [
-      "build-spec",
-      `--raw`,
-      `--chain=/app/${specFileName}`,
-      "--disable-default-bootnode",
-    ]
+    ['build-spec', `--raw`, `--chain=/app/${specFileName}`, '--disable-default-bootnode']
   );
 
   const spec: RawRelayChainSpec = JSON.parse(out);
@@ -147,17 +130,19 @@ export async function buildSpecRaw(
 /**
  * Export parachain verification wasm code
  * @param config -
+ * @public
  */
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export async function exportGenesisWasm(_config: unknown): Promise<void> {
-  console.error("implement me");
+  console.error('implement me');
 }
 
 /**
  * Export parachain genesis state
  * @param config -
+ * @public
  */
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export async function exportGenesisState(_config: unknown): Promise<void> {
-  console.error("implement me");
+  console.error('implement me');
 }
