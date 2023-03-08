@@ -5,3 +5,4 @@ coverage
 assets
 *.cjs
 dist
+webpack.config.js

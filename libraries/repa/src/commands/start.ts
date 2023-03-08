@@ -1,8 +1,10 @@
+import chalk from "chalk";
 import { Command } from "commander";
 import { spawn } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { find, isNil, map, mapObjIndexed, propEq, startsWith } from "ramda";
+import { equals, find, includes, isNil, map, propEq, startsWith } from "ramda";
+import slug from "slug";
 import { parse } from "yaml";
 
 import { configFileName } from "..";
@@ -10,7 +12,8 @@ import { ICommonOptions } from "../bin";
 import { exec } from "../exec";
 import { generateSpecFileName, readConfig } from "../helpers";
 import { IDockerCompose } from "../types/dockerComposeTypes";
-import { Node } from "../types/relayChainTypes";
+import { Node } from "../types/repaConfig";
+
 /**
  * Workflow main Command
  *
@@ -24,6 +27,16 @@ export default async function makeCommand(): Promise<Command> {
   cmd.option("-c, --config <file>", "Config path", configFileName);
   cmd.option("-o, --output <string>", "Output directory", "output");
   cmd.option("-t, --tail", "Tail the compose logs", false);
+  cmd.option(
+    "-d, --debug",
+    "Include all console.debug, UNSAFE because it will show the suri",
+    false
+  );
+  cmd.option(
+    "--justKeys",
+    "Skip starting the containers, assume they are running, just add keys",
+    false
+  );
 
   cmd.action(start);
 
@@ -31,6 +44,8 @@ export default async function makeCommand(): Promise<Command> {
 }
 interface IStartOptions extends ICommonOptions {
   tail: boolean;
+  justKeys: boolean;
+  debug: boolean;
 }
 /**
  * Generate init config
@@ -40,10 +55,13 @@ async function start(
     config: configFileName,
     output: "output",
     tail: false,
+    justKeys: false,
+    debug: false,
   }
 ): Promise<void> {
-  const { output, tail } = options;
-  const config = await readConfig(configFileName);
+  const { output, justKeys, config: configFileName } = options;
+
+  const { dockerComposeProject } = await readConfig(configFileName);
 
   const composeFile: IDockerCompose = parse(
     (
@@ -51,7 +69,14 @@ async function start(
     ).toString()
   );
 
-  exec(
+  if (isNil(dockerComposeProject)) {
+    throw new Error(
+      "Cannot determine the project name, either add `dockerComposeProject` to the `repa.yml` file or export the COMPOSE_PROJECT_NAME"
+    );
+  }
+
+  console.log(chalk.yellow("Checking compose integrity"));
+  await exec(
     [
       "docker-compose",
       `-f ${process.cwd()}/${output}/docker-compose.yml`,
@@ -59,33 +84,101 @@ async function start(
     ].join(" ")
   );
 
-  console.log("Starting the containers ...");
-  const composeUp = spawn(
-    "docker-compose",
-    [`-f ./${output}/docker-compose.yml`, "up"],
-    {
-      detached: true,
-      shell: true,
-      stdio: tail ? "inherit" : undefined,
-      cwd: process.cwd(),
-    }
+  console.log(chalk.yellow("Starting the containers"));
+  console.log(
+    chalk.yellow(
+      [
+        "    $",
+        "docker-compose ",
+        `-f ./${output}/docker-compose.yml`,
+        "up",
+      ].join(" ")
+    )
   );
-  composeUp.stdout?.on("close", () => {
-    console.log("shutting down");
-    process.exit();
-  });
-  composeUp.stderr?.on("error", (e) => {
-    console.error(e);
-    process.exit(1);
-  });
 
   // console.debug('compose process %s', composeUp.pid)
-  console.log("Waiting for services to start ...");
-  // until we find better way of checking are the services running
-  setTimeout(() => {
-    console.log("Adding the keys ...");
+  console.log(chalk.yellow("  Waiting for services to start"));
+  let processedServices = Object.keys(composeFile.services).length;
 
-    mapObjIndexed((svc, key) => {
+  // by default we start the containers, but this is very buggy, we can just add keys
+  if (!justKeys) {
+    const composeUp = spawn("docker-compose", [`-f docker-compose.yml`, "up"], {
+      detached: true,
+      shell: true,
+      // stdio: tail ? "inherit" : undefined,
+      cwd: resolve(process.cwd(), output),
+    });
+
+    composeUp.on("close", (code) => {
+      console.log("shutting down code", code);
+      process.exit(code || 0);
+    });
+
+    composeUp.stderr?.on("data", async (data) => {
+      // this is where the output is written, this is NOT AN ERROR but it can be :()
+      const d = data.toString();
+
+      if (includes("Native runtime:", d)) {
+        console.log(d);
+        processedServices -= 1;
+      } else {
+        // this must be here
+        // process.stdout.write(d);
+        console.log(d);
+      }
+    });
+  } else {
+    // now when we assume we have the containers running, we need to set this to 0 so the keys can pick it up
+    processedServices = 0;
+  }
+
+  const interval = setInterval(async () => {
+    console.log("checking the services ...", processedServices);
+    if (equals(0, processedServices)) {
+      // clear interval first
+      clearInterval(interval);
+
+      // insert keys
+      await insertKeys(options);
+
+      console.log("Restarting services so the finalization can begin ...");
+      await exec(
+        ["docker-compose", `-f docker-compose.yml`, "restart"].join(" "),
+        {
+          cwd: resolve(process.cwd(), output),
+        }
+      );
+      console.log("🎉🎉🎉🎉🎉🎉 done");
+      process.exit(0);
+    }
+  }, 1000);
+}
+
+/**
+ * Insert keys using docker image with docker-compose mounted volumes. Keys are calculated based on provided suri.
+ * The keys are inserted using the `key insert` command.
+ * Key-types which are inserted are `babe` and `gran`
+ * @param options - {@link IStartOptions}
+ */
+async function insertKeys(options: IStartOptions): Promise<void> {
+  const { output, debug } = options;
+  const config = await readConfig(configFileName);
+
+  const composeFile: IDockerCompose = parse(
+    (
+      await readFile(resolve(process.cwd(), output, `docker-compose.yml`))
+    ).toString()
+  );
+  console.log(composeFile);
+  const keys: string[] = Object.keys(composeFile.services);
+  const composeProjectName = slug(
+    process.env.COMPOSE_PROJECT_NAME as string,
+    "-"
+  );
+
+  await Promise.all(
+    map(async (key: string) => {
+      const svc = composeFile.services[key];
       // find the node name in the config
       const node = find<Node>(propEq("name", key))(config.relay.nodes);
 
@@ -96,7 +189,11 @@ async function start(
       const volumes = map((v) => {
         if (startsWith(key, v)) {
           // true name of the volume. compose will prefix it with the name of the stack
-          return ["-v", `${composeFile.name}_${key}:/data`].join(" ");
+          return ["-v", `${composeProjectName}_${key}:/data`].join(" ");
+        } else if (startsWith(".:", v)) {
+          // we need to have the abs patch calculated because docker-compose
+          // will have the relative local ctx path
+          return ["-v", `${process.cwd()}/${output}:/app`].join(" ");
         }
         return ["-v", v].join(" ");
       }, svc.volumes);
@@ -116,27 +213,47 @@ async function start(
         )}`,
         `--suri="${node.suri}"`,
       ];
+      if (debug) {
+        console.debug(
+          "cmd",
+          [...baseCmd, "--scheme sr25519", "--key-type babe"].join(" ")
+        );
+      }
 
-      console.log(`Inserting the babe key for ${key}`);
-      exec([...baseCmd, "--scheme sr25519", "--key-type babe"].join(" "), {
-        silent: true,
-      });
+      console.log(` Inserting the ${chalk.green("babe")} key for ${key}`);
+      const b = await exec(
+        [...baseCmd, "--scheme sr25519", "--key-type babe"].join(" "),
+        {
+          cwd: resolve(process.cwd(), output),
+        }
+      );
+      if (debug) {
+        console.debug(
+          "cmd",
+          [...baseCmd, "--scheme ed25519", "--key-type gran"].join(" ")
+        );
+      }
+      if (debug) {
+        console.debug("babe out: ", b);
+      }
+      console.log(` Inserting the ${chalk.green("gran")} key for ${key}`);
+      const g = await exec(
+        [...baseCmd, "--scheme ed25519", "--key-type gran"].join(" "),
+        {
+          cwd: resolve(process.cwd(), output),
+        }
+      );
 
-      console.log(`Inserting the grandpa key for ${key}`);
-      exec([...baseCmd, "--scheme ed25519", "--key-type gran"].join(" "), {
-        silent: true,
-      });
-    }, composeFile.services);
+      if (debug) {
+        console.debug("gran out: ", g);
+      }
 
-    // https://azimi.me/2014/12/31/kill-child_process-node-js.html
-    const pid = composeUp.pid as number;
-    // Please note - before pid. This converts a pid to a group of pids for process kill() method.
-    process.kill(-pid);
-    // now we need to restart
-    exec(
-      ["docker-compose", `-f ${output}/docker-compose.yml`, "restart"].join(" ")
-    );
-    console.log("🎉🎉🎉🎉🎉🎉 done");
-    process.exit(0);
-  }, 3000);
+      //// maybe this needs to be handled better
+      // const pid = composeUp.pid as number;
+      // // Please note - before pid. This converts a pid to a group of pids for process kill() method.
+      // process.kill(-pid);
+
+      // https://azimi.me/2014/12/31/kill-child_process-node-js.html
+    })(keys)
+  );
 }

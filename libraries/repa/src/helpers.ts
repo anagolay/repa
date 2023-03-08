@@ -7,7 +7,7 @@ import { parse } from "yaml";
 
 import { exec } from "./exec";
 import { SessionKey } from "./types/plainSpecRelay";
-import { IRepaConfig } from "./types/relayChainTypes";
+import { IRepaConfig } from "./types/repaConfig";
 
 export interface IAccountForSpec {
   aura: KeyringPair;
@@ -112,11 +112,11 @@ export function generateSpecFileName(
  *
  * @param image
  */
-export function generateNodeKey(image: string): {
+export async function generateNodeKey(image: string): Promise<{
   key: string;
   address: string;
-} {
-  const res = exec(`docker run --rm ${image} key generate-node-key`);
+}> {
+  const res = await exec(`docker run --rm ${image} key generate-node-key`);
   return {
     key: res.stdout.trim(),
     address: res.stderr.trim(),

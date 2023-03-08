@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import yaml from "yaml";
 
 import { configFileName } from "..";
-import { IRepaConfig } from "../types/relayChainTypes";
+import { IRepaConfig } from "../types/repaConfig";
 
 const initFile: IRepaConfig = {
   version: 1,
@@ -12,6 +12,7 @@ const initFile: IRepaConfig = {
    * container management engine, possible values `podman`, `docker`
    */
   cme: "docker",
+  dockerComposeProject: "my compose project name",
   relay: {
     image: "parity/polkadot:v0.9.38",
     spec: {
@@ -23,7 +24,8 @@ const initFile: IRepaConfig = {
       RUST_LOG: "parachain::candidate-backing=trace",
     },
     // common flags
-    cmdFlags: ["--rpc-methods=unsafe"],
+    // cmdFlags: ["--rpc-methods=unsafe"],
+    cmdFlags: [],
     nodes: [
       {
         suri: "$MY_SURY_ENV_VAR",

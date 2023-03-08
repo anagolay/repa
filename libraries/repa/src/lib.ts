@@ -1,9 +1,9 @@
 import { equals, isNil, map, mergeDeepRight } from "ramda";
 
-import { exec } from "./exec";
+import { dockerRun } from "./docker";
 import { createAccount, IAccountForSpec, relaySessionKeys } from "./helpers";
 import { RelayPlainSpec, SessionKey } from "./types/plainSpecRelay";
-import { IRepaConfig, RawRelayChainSpec } from "./types/relayChainTypes";
+import { IRepaConfig, RawRelayChainSpec } from "./types/repaConfig";
 
 /**
  * Update the specs
@@ -90,17 +90,12 @@ export async function buildSpec(config: IRepaConfig): Promise<RelayPlainSpec> {
       spec: { chainType },
     },
   } = config;
-  const out = exec(
-    [
-      "docker",
-      "run",
-      "--rm",
-      image,
-      "build-spec",
-      `--chain=${chainType}`,
-      "--disable-default-bootnode",
-    ].join(" ")
-  );
+
+  const out = await dockerRun(["--rm"], image, [
+    "build-spec",
+    `--chain=${chainType}`,
+    "--disable-default-bootnode",
+  ]);
 
   const spec: RelayPlainSpec = JSON.parse(out);
   return spec;
@@ -125,36 +120,44 @@ export async function buildSpecRaw(
       spec: { chainType },
     },
   } = config;
+
   const absOutput = outputDir.startsWith("/")
     ? outputDir
     : `$(pwd)/./"${outputDir}"`;
-  const out = exec(
+
+  const out = await dockerRun(
     [
-      "docker",
-      "run",
       `--volume ${absOutput}:/app`,
       `--name=tmp_relaychain_${chainType}`,
       "--rm",
-      image,
+    ],
+    image,
+    [
       "build-spec",
       `--raw`,
       `--chain=/app/${specFileName}`,
       "--disable-default-bootnode",
-    ].join(" ")
+    ]
   );
 
   const spec: RawRelayChainSpec = JSON.parse(out);
   return spec;
 }
 
-export async function exportGenesisWasm(config: any): Promise<void> {
-  console.log("implement me");
+/**
+ * Export parachain verification wasm code
+ * @param config -
+ */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export async function exportGenesisWasm(_config: unknown): Promise<void> {
+  console.error("implement me");
 }
 
 /**
- *
- * @param config
+ * Export parachain genesis state
+ * @param config -
  */
-export async function exportGenesisState(config: any): Promise<void> {
-  console.log("implement me");
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export async function exportGenesisState(_config: unknown): Promise<void> {
+  console.error("implement me");
 }

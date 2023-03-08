@@ -16,9 +16,7 @@
   "workbench.sideBar.location": "right",
   "editor.wordWrap": "bounded",
   "editor.wordWrapColumn": 110,
-  "editor.rulers": [
-    110
-  ],
+  "editor.rulers": [110],
   "editor.formatOnSave": true,
   "editor.formatOnPaste": false,
   "[svelte]": {
@@ -60,6 +58,7 @@
     "Keypair",
     "millis",
     "multihashes",
+    "parachain",
     "pnpm",
     "pnpx",
     "polkadot",

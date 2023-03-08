@@ -1,29 +1,37 @@
-import shell from "shelljs";
+import {
+  exec as originalExec,
+  ExecOptions as BaseExecOptions,
+  PromiseWithChild,
+} from "child_process";
+import { promisify } from "util";
+
+export interface IExecOptions extends BaseExecOptions {
+  encoding?: BufferEncoding;
+}
 
 /**
- * Execute shell command
- *
- * @param cmd
- * @param options
+ * Default exec options. A drop-in async replacement for native exec
  */
-export function exec(
-  cmd: string,
-  options?: {
-    silent?: boolean;
-    fatal?: boolean;
-  }
-): shell.ShellString {
-  const { silent, fatal = true } = options || {};
-  if (!silent) {
-    console.log(`$ ${cmd}`);
-  }
-  const res = shell.exec(cmd, { silent: true });
-  if (res.code !== 0) {
-    console.error("Error: Command failed with code", res.code);
-    console.log(res);
-    if (fatal) {
-      process.exit(1);
-    }
-  }
-  return res;
+export const defaultExecOptions: IExecOptions = {
+  cwd: ".",
+  encoding: "utf8",
+};
+
+/**
+ * Async Exec with decent defaults
+ * @param command
+ * @param options
+ * @returns
+ */
+export async function exec(
+  command: string,
+  options: IExecOptions = defaultExecOptions
+): Promise<
+  PromiseWithChild<{
+    stdout: string;
+    stderr: string;
+  }>
+> {
+  const execAsync = promisify(originalExec);
+  return execAsync(command, options);
 }

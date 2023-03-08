@@ -3,7 +3,6 @@
  * Small subset of real structure
  */
 export interface IDockerCompose extends Record<string, unknown> {
-  name?: string;
   version: string;
   services: Record<string, IDockerComposeService>;
   volumes: Record<string, any>;

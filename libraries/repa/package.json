@@ -30,13 +30,15 @@
   "module": "./lib/index.js",
   "types": "./lib/util.d.ts",
   "scripts": {
-    "_phase:build": "NODE_ENV=production heft test --clean",
-    "_phase:code-quality": "eslint --ignore-path ../.eslintignore .",
+    "_phase:build": "NODE_ENV=production heft test --clean && node ./buildBinaries.cjs",
+    "_phase:code-quality": "eslint --ignore-path ../../.eslintignore .",
     "_phase:test": "heft test --no-build",
     "build": "NODE_ENV=production heft test --clean",
     "test": "heft test --clean",
     "test:watch": "heft test --watch",
     "watch": "heft build --watch",
+    "lint": "eslint --ignore-path ../../.eslintignore .",
+    "lint:fix": "eslint --fix --ext .js,.ts --ignore-path ../../.eslintignore .",
     "build:bin": "pkg --targets node18-linux ./dist/repa.js --out-path binaries",
     "link:bin": "sudo ln -sf $(pwd)/tools/cli/dist/repa.js /usr/local/bin/repa && sudo chmod +x /usr/local/bin/repa",
     "link:bin:lib": "sudo ln -sf $GITPOD_REPO_ROOT/tools/cli/lib/index.js /usr/local/bin/repa-lib && sudo chmod +x /usr/local/bin/anagolay-lib"
@@ -50,7 +52,8 @@
     "ramda": "0.28.0",
     "pretty-error": "4.0.0",
     "shelljs": "0.8.5",
-    "slug": "8.2.2"
+    "slug": "8.2.2",
+    "chalk": "4"
   },
   "devDependencies": {
     "@kelp_digital/heft-esm-transform-plugin": "https://ipfs.anagolay.network/ipfs/bafybeid2la5atzl4bvmoy4g3ok3qpdp6rriyd2j2w7pxh72rwvwkbdzova",

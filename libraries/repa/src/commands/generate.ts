@@ -1,11 +1,13 @@
 import { cryptoWaitReady } from "@polkadot/util-crypto";
+import chalk from "chalk";
 import { Command } from "commander";
+import { exec } from "node:child_process";
 import { writeFile as writeFileOrig } from "node:fs/promises";
 import { resolve } from "node:path";
 import { equals } from "ramda";
 import yaml from "yaml";
 
-import { configFileName, exec } from "..";
+import { configFileName } from "..";
 import { ICommonOptions } from "../bin";
 import { generateRelayDockerCompose } from "../docker";
 import { generateSpecFileName, readConfig } from "../helpers";
@@ -53,7 +55,7 @@ async function generate(
 
   const outputDir = resolve(process.cwd(), output);
 
-  exec(`mkdir -p ${output}`);
+  exec(`mkdir -p ${outputDir}`);
   const relayFileNameSpecPlain = generateSpecFileName(
     yamlFile.relay.spec.chainType
   );
@@ -74,18 +76,16 @@ async function generate(
   );
 
   console.log(`Generating docker-compose ...`);
-  const dcr = await generateRelayDockerCompose(
-    yamlFile,
-    outputDir,
-    relayFileNameSpecRaw
-  );
+  const dcr = await generateRelayDockerCompose(yamlFile, relayFileNameSpecRaw);
 
   await writeFile(resolve(outputDir, `docker-compose.yml`), dcr, true);
 
   console.log("docker-compose.yml written");
 
   console.log(
-    "All files are written, please run the `start` command to start the containers."
+    `All files are written, please run the ${chalk.green(
+      "start"
+    )} command to start the containers.`
   );
 }
 

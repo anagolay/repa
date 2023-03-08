@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { spawn } from "child_process";
-import { equals, includes, join, mergeDeepRight } from "ramda";
+import { equals, includes, join, keys, mergeDeepRight } from "ramda";
 import slug from "slug";
 
 import { generateNodeKey } from "./helpers";
@@ -9,7 +9,7 @@ import {
   IDockerComposeService,
   IDockerUlimits,
 } from "./types/dockerComposeTypes";
-import { IRepaConfig } from "./types/relayChainTypes";
+import { IRepaConfig } from "./types/repaConfig";
 /**
  * docker run ....
  * @param image -
@@ -18,8 +18,8 @@ import { IRepaConfig } from "./types/relayChainTypes";
  * @returns
  */
 export async function dockerRun(
-  image: string,
   before: string[],
+  image: string,
   after: string[]
 ): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -28,7 +28,9 @@ export async function dockerRun(
 
     console.debug(cmd);
 
-    const c = spawn("docker", args);
+    const c = spawn("docker", args, {
+      shell: true,
+    });
 
     /**
      * will hold our spec
@@ -45,8 +47,9 @@ export async function dockerRun(
       }
     });
 
-    c.on("close", (code: number) => {
-      console.debug(`child process exited with code ${code}`);
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    c.on("close", (_code: number) => {
+      // console.debug(`child process exited with code ${code}`);
       const spec: Record<string, any> = Buffer.concat(bufferArray);
       resolve(spec.toString());
     });
@@ -54,16 +57,17 @@ export async function dockerRun(
 }
 /**
  * Generate docker-compose.yml file based on the config
- * @param params
+ * @param config
+ * @param rawSpecsFileName
+ * @returns
  */
 export async function generateRelayDockerCompose(
   config: IRepaConfig,
-  outputAppDir: string,
   rawSpecsFileName: string
 ): Promise<any> {
   const { env: globalEnv, cmdFlags: globalFlags, nodes, image } = config.relay;
   const dockerCompose: IDockerCompose = {
-    name: `relaychain_${config.relay.spec.chainType}`,
+    name: slug(`relaychain ${config.relay.spec.chainType}`, "-"),
     version: "3",
     services: {},
     volumes: {},
@@ -76,10 +80,15 @@ export async function generateRelayDockerCompose(
     },
   };
   // generate node key, we are doing this only one time, we could do it for every service for deterministic networking
-  const { key: nodeKey, address: nodeAddress } = generateNodeKey(
+  const { key: nodeKey, address: nodeAddress } = await generateNodeKey(
     config.relay.image
   );
 
+  const internalNetwork = {
+    internal: {
+      internal: true,
+    },
+  };
   for (let idx = 0; idx < nodes.length; idx++) {
     const { name, cmdFlags, env, service, port, wsPort, rpcPort, networks } =
       nodes[idx];
@@ -105,7 +114,8 @@ export async function generateRelayDockerCompose(
     const svc: IDockerComposeService = {
       image,
       container_name: slug(join("-", [name, idx])),
-      volumes: [`${name}:/data`, `${outputAppDir}:/app`],
+      // the `.` is for the contextual local path
+      volumes: [`${name}:/data`, `.:/app`],
       ports,
       command: [
         "--base-path=/data",
@@ -122,14 +132,18 @@ export async function generateRelayDockerCompose(
       ],
       environment: mergeDeepRight(globalEnv, env || {}),
       labels: service?.labels || [],
-      networks: service?.networks || [],
+      networks: [keys(internalNetwork)[0], ...(service?.networks || [])],
       ulimits,
       depends_on: dependsOn,
     };
 
     dockerCompose.services[serviceName] = svc;
     dockerCompose.volumes[name] = {};
-    dockerCompose.networks = { ...dockerCompose.networks, ...networks };
+    dockerCompose.networks = {
+      ...dockerCompose.networks,
+      ...internalNetwork,
+      ...networks,
+    };
   }
 
   return dockerCompose;
