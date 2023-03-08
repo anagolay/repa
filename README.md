@@ -93,52 +93,8 @@ Commands are aimed to be intuitive and familiar.
 
 ### init
 
-Initialize the `repa.yml` config.
+Initialize the `repa.yml` config. Sample config file is located in [examples](./examples/repa.yml)
 
-Sample config file:
-
-```yml
-version: 1
-cme: docker
-projectName: relaychain-idiyanale-testnet
-relay:
-  image: parity/polkadot:v0.9.38
-  spec:
-    chainType: rococo-local
-    name: Idiyanale Testnet
-    protocolId: 'idiyanale_rococo'
-    sudo: MY-SUDO-SS58
-    runtimeGenesisConfig:
-      configuration:
-        config:
-          validation_upgrade_cooldown: 5
-      balances:
-        balances:
-          - - MY-SUDO-SS58
-            - 3000000000000000000
-  env:
-    RUST_LOG: parachain::candidate-backing=trace
-  nodes:
-    - name: relay1
-      suri: 'SURIIIIIIII'
-      balance: 3000000000000000000
-      wsPort: 9944
-      rpcPort: 9933
-      port: 30333
-      cmdFlags:
-        - --force-authoring
-      env:
-        RUST_LOG: babe=debug
-      service:
-        labels:
-          caddy: 'idiyanale-testnet.anagolay.io'
-          caddy.reverse_proxy: '{{upstreams 9944}}'
-        networks:
-          - caddy
-    - name: relay2
-      suri: 'ANOTHER_SURIIIII'
-      balance: 3000000000000000000
-```
 
 ### generate
 
