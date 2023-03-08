@@ -1,0 +1,64 @@
+version: '3'
+services:
+  relay1:
+    image: parity/polkadot:v0.9.38
+    container_name: relay1-0
+    volumes:
+      - relay1:/data
+      - .:/app
+    ports:
+      - 9944:9944
+    command:
+      - --base-path=/data
+      - --chain=/app/relay-raw-rococo-local.json
+      - --validator
+      - --name=relay1
+      - --force-authoring
+      - --no-telemetry
+      - --unsafe-rpc-external
+      - --unsafe-ws-external
+      - --node-key=dqwerty
+    environment:
+      RUST_LOG: babe=debug
+    labels:
+      caddy: relay.ws.anagolay.io
+      caddy.reverse_proxy: '{{upstreams 9944}}'
+    networks:
+      - internal
+      - caddy
+    ulimits: &a1
+      nofile:
+        soft: 65536
+        hard: 65536
+    depends_on: []
+  relay2:
+    image: parity/polkadot:v0.9.38
+    container_name: relay2-1
+    volumes:
+      - relay2:/data
+      - .:/app
+    ports: []
+    command:
+      - --base-path=/data
+      - --chain=/app/relay-raw-rococo-local.json
+      - --validator
+      - --name=relay2
+      - --force-authoring
+      - --no-telemetry
+      - --bootnodes=/dns/relay1/tcp/30333/p2p/addr(dqwert)
+    environment:
+      RUST_LOG: parachain::candidate-backing=trace
+    labels: []
+    networks:
+      - internal
+    ulimits: *a1
+    depends_on:
+      - relay1
+volumes:
+  relay1: {}
+  relay2: {}
+networks:
+  internal:
+    internal: true
+  caddy:
+    external: true

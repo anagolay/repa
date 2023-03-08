@@ -1,0 +1,47 @@
+version: 1
+cme: docker
+projectName: relaychain-idiyanale-testnet
+relay:
+  image: parity/polkadot:v0.9.38
+  spec:
+    chainType: rococo-local
+    name: Idiyanale Testnet
+    protocolId: 'idiyanale_rococo'
+    sudo: SS58-PUB-ADDRESSSS
+    runtimeGenesisConfig:
+      configuration:
+        config:
+          validation_upgrade_cooldown: 5
+      balances:
+        balances:
+          - - SS58-PUB-ADDRESSSS
+            - 3000000000000000000
+  env:
+    RUST_LOG: parachain::candidate-backing=trace
+  nodes:
+    - name: relay1
+      suri: 'SURIIII'
+      balance: 3000000000000000000
+      cmdFlags:
+        - --force-authoring
+        - --no-telemetry
+        - --unsafe-ws-external
+        - --unsafe-rpc-external
+      env:
+        RUST_LOG: babe=debug
+      service:
+        labels:
+          caddy: 'relay.ws.anagolay.io'
+          caddy.reverse_proxy: '{{upstreams 9944}}'
+        networks:
+          - caddy
+      networks:
+        caddy:
+          external: true
+
+    - name: relay2
+      suri: 'SURIIIIIIII2'
+      balance: 3000000000000000000
+      cmdFlags:
+        - --force-authoring
+        - --no-telemetry

@@ -1,0 +1,19 @@
+{
+  "name": "Idiyanale Testnet",
+  "id": "rococo_local_testnet",
+  "chainType": "Live",
+  "bootNodes": [],
+  "telemetryEndpoints": null,
+  "protocolId": "idiyanale_rococo",
+  "properties": null,
+  "forkBlocks": null,
+  "badBlocks": null,
+  "lightSyncState": null,
+  "codeSubstitutes": {},
+  "genesis": {
+    "raw": {
+      "top": {},
+      "childrenDefault": {}
+    }
+  }
+}

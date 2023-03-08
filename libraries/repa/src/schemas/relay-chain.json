@@ -1,0 +1,289 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Relay chain generic schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string"
+    },
+    "chainType": {
+      "type": "string"
+    },
+    "bootNodes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "telemetryEndpoints": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "number"
+          }
+        ],
+        "additionalItems": false
+      }
+    },
+    "protocolId": {
+      "type": "string"
+    },
+    "properties": {
+      "type": "object",
+      "properties": {
+        "ss58Format": {
+          "type": "number"
+        },
+        "tokenDecimals": {
+          "type": "number"
+        },
+        "tokenSymbol": {
+          "type": "string"
+        }
+      },
+      "required": ["ss58Format", "tokenDecimals", "tokenSymbol"]
+    },
+    "relay_chain": {
+      "type": "string"
+    },
+    "para_id": {
+      "type": "number"
+    },
+    "codeSubstitutes": {
+      "type": "object",
+      "properties": {},
+      "required": []
+    },
+    "genesis": {
+      "type": "object",
+      "properties": {
+        "runtime": {
+          "type": "object",
+          "properties": {
+            "system": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": ["code"]
+            },
+            "parachainSystem": {},
+            "parachainInfo": {
+              "type": "object",
+              "properties": {
+                "parachainId": {
+                  "type": "number"
+                }
+              },
+              "required": ["parachainId"]
+            },
+            "sudo": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string"
+                }
+              },
+              "required": ["key"]
+            },
+            "treasury": {},
+            "balances": {
+              "type": "object",
+              "properties": {
+                "balances": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ],
+                    "additionalItems": false
+                  }
+                }
+              },
+              "required": ["balances"]
+            },
+            "collatorSelection": {
+              "type": "object",
+              "properties": {
+                "invulnerables": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "candidacyBond": {
+                  "type": "number"
+                },
+                "desiredCandidates": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "invulnerables",
+                "candidacyBond",
+                "desiredCandidates"
+              ]
+            },
+            "session": {
+              "type": "object",
+              "properties": {
+                "keys": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "aura": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["aura"]
+                      }
+                    ],
+                    "additionalItems": false
+                  }
+                }
+              },
+              "required": ["keys"]
+            },
+            "aura": {
+              "type": "object",
+              "properties": {
+                "authorities": {
+                  "type": "array",
+                  "items": {}
+                }
+              },
+              "required": ["authorities"]
+            },
+            "auraExt": {},
+            "polkadotXcm": {
+              "type": "object",
+              "properties": {
+                "safeXcmVersion": {
+                  "type": "number"
+                }
+              },
+              "required": ["safeXcmVersion"]
+            },
+            "vesting": {
+              "type": "object",
+              "properties": {
+                "vesting": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ],
+                    "additionalItems": false
+                  }
+                }
+              },
+              "required": ["vesting"]
+            },
+            "operations": {
+              "type": "object",
+              "properties": {
+                "operations": {
+                  "type": "array",
+                  "items": {}
+                },
+                "versions": {
+                  "type": "array",
+                  "items": {}
+                },
+                "total": {
+                  "type": "number"
+                }
+              },
+              "required": ["operations", "versions", "total"]
+            },
+            "workflows": {
+              "type": "object",
+              "properties": {
+                "workflows": {
+                  "type": "array",
+                  "items": {}
+                },
+                "versions": {
+                  "type": "array",
+                  "items": {}
+                },
+                "total": {
+                  "type": "number"
+                }
+              },
+              "required": ["workflows", "versions", "total"]
+            }
+          },
+          "required": [
+            "system",
+            "parachainSystem",
+            "parachainInfo",
+            "sudo",
+            "treasury",
+            "balances",
+            "collatorSelection",
+            "session",
+            "aura",
+            "auraExt",
+            "polkadotXcm",
+            "vesting",
+            "operations",
+            "workflows"
+          ]
+        }
+      },
+      "required": ["runtime"]
+    }
+  },
+  "required": [
+    "name",
+    "id",
+    "chainType",
+    "bootNodes",
+    "telemetryEndpoints",
+    "protocolId",
+    "properties",
+    "relay_chain",
+    "para_id",
+    "codeSubstitutes",
+    "genesis"
+  ]
+}
