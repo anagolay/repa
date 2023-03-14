@@ -1,0 +1,44 @@
+image: docker.io/woss/gitpod-workspace:gitpod_workspace-full_2023-01-16-03-31-28
+tasks:
+  - name: prep-env
+    init: |
+      nix-env -f '<nixpkgs>' -iA nix-direnv nixpkgs-fmt
+      brew install romkatv/powerlevel10k/powerlevel10k neovim
+      node $GITPOD_REPO_ROOT/common/scripts/install-run-rush.js install
+      node $GITPOD_REPO_ROOT/common/scripts/install-run-rush.js build
+      node $GITPOD_REPO_ROOT/common/scripts/install-run-rush.js prettier
+      exit
+  - name: Start stuff
+    command: bash $GITPOD_REPO_ROOT/_devops/gitpod/start-cmd.sh && exit
+
+ports:
+  - port: 7766
+    visibility: public
+    onOpen: ignore
+  - port: 9944
+    visibility: public
+    onOpen: ignore
+  - port: 9933
+    visibility: public
+    onOpen: ignore
+  - port: 30333
+    visibility: public
+    onOpen: ignore
+
+vscode:
+  extensions:
+    - esbenp.prettier-vscode
+    - donjayamanne.githistory
+    - eamodio.gitlens
+    - yzhang.markdown-all-in-one
+    - dbaeumer.vscode-eslint
+    - foxundermoon.shell-format
+    - streetsidesoftware.code-spell-checker
+    - mhutchie.git-graph
+    - PKief.material-icon-theme
+    - ms-azuretools.vscode-docker
+    - eg2.vscode-npm-script
+    - pflannery.vscode-versionlens
+    - formulahendry.auto-rename-tag
+    - asciidoctor.asciidoctor-vscode
+    - ZixuanChen.vitest-explorer
